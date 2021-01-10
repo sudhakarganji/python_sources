@@ -1,0 +1,157 @@
+sudo apt install gcc
+sudo apt install flex
+sudo apt install bison 
+make
+insmod hello.ko
+rmod hello.ko 
+
+
+hello.c
+
+#include <linux/init.h>
+#include <linux/module.h>
+#include <linux/kernel.h>
+
+
+static int __init  hello_init(void)
+{
+  printk(KERN_ALERT "Hello Sud \n");
+
+   return 0;
+}
+
+static void  __exit hello_exit(void)
+{
+   printk(KERN_ALERT " Hello sud exit of module\n ");
+}
+
+module_init(hello_init);
+module_exit(hello_exit) ;
+~
+
+
+Makefile :
+
+obj-m +=hello.o
+
+KDIR = /usr/src/linux-headers-5.4.0-1029-aws    # header location 
+
+MAKE = make
+all:
+        $(MAKE) -C $(KDIR) M=$(shell pwd)
+
+clean:
+        rm -rf *.o *.ko *.mod *.sysvers *.order
+
+
+
+
+// With Arguments 
+
+#include <linux/init.h>
+#include <linux/module.h>
+#include <linux/kernel.h>
+
+#include <linux/moduleparam.h>
+
+int param_var=0;
+
+// module_param (nam_var, type, permissions)
+module_param(param_var,int,S_IRUSR| S_IWUSR);
+
+
+void display(void)
+
+{
+
+  printk(KERN_ALERT " VAR Value= %d \n", param_var);
+}
+static int __init  hello_init(void)
+{
+  printk(KERN_ALERT "Hello Sud \n");
+  display();
+
+   return 0;
+}
+
+static void  __exit hello_exit(void)
+{
+   printk(KERN_ALERT " Hello sud exit of module\n ");
+}
+
+module_init(hello_init);
+module_exit(hello_exit) ;
+
+
+# Paasing an array as the argument
+#include <linux/init.h>       
+#include <linux/module.h>     
+#include <linux/kernel.h>     
+
+#include <linux/moduleparam.h>
+
+//int param_var=0;
+//int param_var=0;
+ int param_var[3]={0,0,0};
+// module_param (nam_var, type, permissions)
+//module_param(param_var,int,S_IRUSR| S_IWUSR);
+module_param_array(param_var,int,NULL,S_IRUSR| S_IWUSR);
+
+
+void display(void)
+
+{
+
+  printk(KERN_ALERT " VAR Value= %d \n", param_var[0]);
+  printk(KERN_ALERT " VAR Value= %d \n", param_var[1]);
+  printk(KERN_ALERT " VAR Value= %d \n", param_var[2]);
+}
+static int __init  hello_init(void)
+{
+  printk(KERN_ALERT "Hello Sud \n");
+  display();
+
+   return 0;
+}
+
+static void  __exit hello_exit(void)
+{
+   printk(KERN_ALERT " Hello sud exit of module\n ");
+}
+
+module_init(hello_init);
+module_exit(hello_exit) ;
+
+//Creating a Device on Linux :
+cd /dev
+mknod /dev/suddev c 988 1
+ ls -al suddev
+
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/interrupt.h>
+#include <asm/io.h>
+
+#define KBD_IRQ             1       /* IRQ number for keyboard (i8042) */
+#define KBD_DATA_REG        0x60    /* I/O port for keyboard data */
+#define KBD_SCANCODE_MASK   0x7f
+#define KBD_STATUS_MASK     0x80
+
+static irqreturn_t kbd2_isr(int irq, void *dev_id)
+{
+    char scancode;
+
+    scancode = inb(KBD_DATA_REG);
+    /* NOTE: i/o ops take a lot of time thus must be avoided in HW ISRs */
+    pr_info("Scan Code %x %s\n",
+            scancode & KBD_SCANCODE_MASK,
+            scancode & KBD_STATUS_MASK ? "Released" : "Pressed");
+
+    return IRQ_HANDLED;
+}
+
+static int __init kbd2_init(void)
+{
+    return request_irq(KBD_IRQ, kbd2_isr, IRQF_SHARED, "kbd2", (void *)kbd2_isr);
+}
+
